@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3">Залишки товару клієнта</h1>
+        <p class="text-muted">Відвантажений товар для клієнта</p>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Фільтри</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('client_stock.client_stock_list') }}">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="customer_id">Клієнт:</label>
+                    <select class="form-control" id="customer_id" name="customer_id">
+                        <option value="">Всі клієнти</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}" {% if selected_customer_id == customer.id %}selected{% endif %}>
+                    {{ customer.code }} - {{ customer.name }}
+                </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="sku">SKU:</label>
+                    <input type="text" class="form-control" id="sku" name="sku" value="{{ sku_filter }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="name">Назва товару:</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ name_filter }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="type">Тип товару:</label>
+                    <select class="form-control" id="type" name="type">
+                        <option value="" {% if not type_filter %}selected{% endif %}>Всі типи</option>
+                        <option value="КГ" {% if type_filter == 'КГ' %}selected{% endif %}>КГ</option>
+                        <option value="ШТ" {% if type_filter == 'ШТ' %}selected{% endif %}>ШТ</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter mr-1"></i> Фільтрувати
+                    </button>
+                    <a href="{{ url_for('client_stock.client_stock_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt mr-1"></i> Скинути
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Залишки товару</h6>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="clientStockTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>SKU</th>
+                        <th>Назва товару</th>
+                        <th>Кількість</th>
+                        <th>Тип товару</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>
+                            {% if item.packaging_unit_type == 'КГ' %}
+                                {{ "%.2f"|format(item.quantity_kg or 0) }}
+                            {% else %}
+                                {{ item.quantity_units or 0 }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.packaging_unit_type }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-1"></i> Немає даних для відображення.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#clientStockTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Ukrainian.json"
+            }
+        });
+    });
+</script>
+{% endblock %}

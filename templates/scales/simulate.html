@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Симуляція ваг{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scales-simulator.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Симуляція складських ваг</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="scales-device shadow">
+                <!-- Scales Display -->
+                <div class="scales-display">
+                    <div class="weight-display">
+                        <div class="current-weight">Поточна вага: <span id="weight-value">0.00</span> кг</div>
+                    </div>
+                    <div class="input-field">
+                        <label for="weight-input">Введіть вагу (кг):</label>
+                        <input type="number" id="weight-input" class="form-control" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <button id="generate-sscc-btn" class="btn btn-primary mt-3 w-100">Згенерувати SSCC</button>
+                </div>
+                
+                <!-- Result Section -->
+                <div class="weighing-result" id="weighing-result">
+                    <div class="sscc-code" id="sscc-display"></div>
+                    <div class="barcode-container" id="barcode-container"></div>
+                    <div class="label-preview" id="label-preview">
+                        <div class="label-header">Етикетка</div>
+                        <div class="label-content">
+                            <div class="label-row">SSCC: <span id="label-sscc"></span></div>
+                            <div class="label-row">Вага брутто: <span id="label-weight"></span> кг</div>
+                            <div class="label-row">Дата: <span id="label-date"></span></div>
+                        </div>
+                    </div>
+                    <button class="print-button" id="print-label-btn">Друк етикетки</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Include JsBarcode library -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="{{ url_for('static', filename='js/scales-simulator.js') }}"></script>
+{% endblock %}

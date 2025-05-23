@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ title }}</h1>
+    <p class="lead">Керування фіксованими місцями комплектування для кожного SKU</p>
+    
+    <div class="mb-3">
+        <a href="{{ url_for('storage.sku_picking_location_add') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Призначити нове місце комплектування SKU
+        </a>
+        <a href="{{ url_for('storage.storage_location_list') }}" class="btn btn-secondary">
+            <i class="fas fa-list"></i> Переглянути всі місця зберігання
+        </a>
+    </div>
+    
+    {% if sku_locations %}
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Призначення місць комплектування для SKU</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Назва товару</th>
+                            <th>Місце відбору</th>
+                            <th>Ряд</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loc in sku_locations %}
+                        <tr>
+                            <td>{{ loc.sku }}</td>
+                            <td>{{ sku_product_names.get(loc.sku, 'Unknown') }}</td>
+                            <td>{{ loc.location.location_code }}</td>
+                            <td>{{ loc.location.row.name if loc.location.row else 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('storage.sku_picking_location_edit', id=loc.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Редагувати
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ loc.id }}">
+                                        <i class="fas fa-trash"></i> Видалити
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal{{ loc.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ loc.id }}" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ loc.id }}">Підтвердити видалення</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Ви впевнені, що хочете видалити призначення місця комплектування для <strong>{{ loc.sku }}</strong>?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Відхилити</button>
+                                                <form action="{{ url_for('storage.sku_picking_location_delete', id=loc.id) }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                                    <button type="submit" class="btn btn-danger">Видалити</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Місця комплектування SKU ще не призначено. Скористайтеся кнопкою вище, щоб призначити фіксовані місця комплектування для SKU.
+    </div>
+    {% endif %}
+    
+    <div class="card mt-4">
+    </div>
+</div>
+{% endblock %}

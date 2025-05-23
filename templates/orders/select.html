@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Вибір типу замовлення</h1>
+    
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Створення замовлення</h6>
+                </div>
+                <div class="card-body">
+                    <p>Оберіть тип замовлення, яке ви хочете створити:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('order.supplier_order_create') }}" class="btn btn-primary btn-block py-3">
+                                <i class="fas fa-truck-loading mr-2"></i> Створити замовлення постачальнику
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('customer_orders.create_customer_order') }}" class="btn btn-primary btn-block py-3">
+                                <i class="fas fa-shipping-fast mr-2"></i> Створити замовлення клієнта
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

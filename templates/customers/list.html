@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <a href="{{ url_for('customer_add') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Додати клієнта
+        </a>
+    </div>
+
+    {% if customers %}
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Код клієнта</th>
+                            <th>Назва клієнта</th>
+                            <th>Адреса</th>
+                            <th>Дата створення</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.code }}</td>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ customer.address }}</td>
+                            <td>{{ customer.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('customer_edit', customer_id=customer.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Редагувати
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ customer.id }}">
+                                        <i class="fas fa-trash"></i> Видалити
+                                    </button>
+                                </div>
+
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ customer.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ customer.id }}" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ customer.id }}">Підтвердження видалення</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Ви впевнені, що хочете видалити клієнта <strong>{{ customer.code }} - {{ customer.name }}</strong>?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасувати</button>
+                                                <form action="{{ url_for('customer_delete', customer_id=customer.id) }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger">Видалити</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Клієнтів поки що немає. Додайте першого клієнта, натиснувши кнопку "Додати клієнта".
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

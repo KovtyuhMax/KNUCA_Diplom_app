@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Деталі замовлення клієнта{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Деталі замовлення #{{ order.order_number }}</h2>
+        <div>
+            {% if order.status == 'created' %}
+            <form action="{{ url_for('customer_orders.process_customer_order', order_id=order.id) }}" method="POST" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cogs"></i> Обробити замовлення
+                </button>
+            </form>
+            {% endif %}
+            
+            <!-- Кнопка для завершення замовлення, якщо воно в статусі 'assembling' -->
+            {% if order.status == 'packed' %}
+            <form method="post" action="{{ url_for('customer_orders.complete_customer_order', order_id=order.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle mr-1"></i> Відвантажити замовлення
+                </button>
+            </form>
+            {% endif %}
+            
+            <!-- Посилання на залишки товару клієнта, якщо замовлення завершено -->
+            {% if order.status == 'completed' %}
+            <a href="{{ url_for('client_stock.client_stock_list', customer_id=order.customer_id) }}" class="btn btn-info">
+                <i class="fas fa-boxes mr-1"></i> Переглянути залишки товару
+            </a>
+            <a href="{{ url_for('export_invoice.export_invoice_view', order_id=order.id) }}" class="btn btn-success ml-2">
+                <i class="fas fa-file-invoice mr-1"></i> Видаткова накладна
+            </a>
+            {% endif %}
+            <a href="{{ url_for('customer_orders.customer_order_list') }}" class="btn btn-secondary ml-2">
+                <i class="fas fa-arrow-left"></i> Назад до списку
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Інформація про замовлення</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 40%">Номер замовлення:</th>
+                            <td>{{ order.order_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Клієнт:</th>
+                            <td>{{ order.customer.name }} ({{ order.customer.code }})</td>
+                        </tr>
+                        <tr>
+                            <th>Статус:</th>
+                            <td>
+                                {% if order.status == 'created' %}
+                                <span class="badge bg-info">Створено</span>
+                                {% elif order.status == 'processing' %}
+                                <span class="badge bg-warning">В обробці</span>
+                                {% elif order.status == 'packed' %}
+                                <span class="badge bg-primary">Упаковано</span>
+                                {% elif order.status == 'completed' %}
+                                <span class="badge bg-success">Виконано</span>
+                                {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Скасовано</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ order.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Дата створення:</th>
+                            <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Створено користувачем:</th>
+                            <td>{{ order.created_by_user.full_name if order.created_by_user else 'Не вказано' }}</td>
+                        </tr>
+                        {% if order.status != 'created' and order.pallets_count %}
+                        <tr>
+                            <th>Кількість палет:</th>
+                            <td><span class="badge bg-primary">{{ order.pallets_count }}</span></td>
+                        </tr>
+                        {% endif %}
+                        {% if order.requires_transfer %}
+                        <tr>
+                            <th>Переміщення товарів:</th>
+                            <td>
+                                <span class="badge bg-warning">Потрібне переміщення</span>
+                                <a href="{{ url_for('transfers.pending_transfers_list') }}" class="btn btn-sm btn-outline-warning ml-2">
+                                    <i class="fas fa-exchange-alt"></i> Переглянути запити
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Товарні позиції</h5>
+        </div>
+        <div class="card-body">
+            {% if order.items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Назва товару</th>
+                            <th>Кількість</th>
+                            <th>Ціна за одиницю</th>
+                            {% if order.status != 'created' %}
+                            <th>Номер палети</th>
+                            <th>Номер лота</th>
+                            <th>Розміри (см)</th>
+                            <th>Об'єм (см³)</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.sku }}</td>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.unit_price if item.unit_price else 'Не вказано' }}</td>
+                            {% if order.status != 'created' %}
+                            <td>
+                                {% if item.pallet_number %}
+                                <span class="badge bg-primary">{{ item.pallet_number }}</span>
+                                {% else %}
+                                <span class="text-muted">Не призначено</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.lot_number %}
+                                <span class="badge bg-success">{{ item.lot_number }}</span>
+                                {% else %}
+                                <span class="text-muted">Не створено</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.length_cm and item.width_cm and item.height_cm %}
+                                {{ item.length_cm }} × {{ item.width_cm }} × {{ item.height_cm }}
+                                {% else %}
+                                <span class="text-muted">Не вказано</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.length_cm and item.width_cm and item.height_cm %}
+                                {{ item.get_volume() | round(2) }}
+                                {% else %}
+                                <span class="text-muted">Не вказано</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Товарні позиції відсутні.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if order.status != 'created' and order.pallets_count %}
+    <div class="card shadow mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Інформація про палети та лоти</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for pallet_num in range(1, order.pallets_count + 1) %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Палета #{{ pallet_num }}</h6>
+                        </div>
+                        <div class="card-body">
+                            {% set pallet_items = order.items | selectattr('pallet_number', 'equalto', pallet_num) | list %}
+                            <p><strong>Кількість товарів:</strong> {{ pallet_items | length }}</p>
+                            {% set lot_number = pallet_items[0].lot_number if pallet_items else 'Не призначено' %}
+                            <p><strong>Номер лота:</strong> <span class="badge bg-success">{{ lot_number }}</span></p>
+                            
+                            {% set lot = order.lots | selectattr('lot_number', 'equalto', lot_number) | first %}
+                            {% if lot %}
+                            <p><strong>Статус лота:</strong>
+                                {% if lot.status == 'wait' %}
+                                <span class="badge bg-info">Очікує комплектації</span>
+                                {% elif lot.status == 'start' %}
+                                <span class="badge bg-warning">В процесі комплектації</span>
+                                {% elif lot.status == 'packed' %}
+                                <span class="badge bg-success">Зібрано</span>
+                                {% endif %}
+                            </p>
+                            
+                            <button type="button" class="btn btn-sm btn-info mb-2" data-toggle="modal" data-target="#lotDetailsModal{{ lot.id }}">
+                                <i class="fas fa-info-circle"></i> Деталі лота
+                            </button>
+                            
+                            <!-- Модальне вікно з деталями лота -->
+                            <div class="modal fade" id="lotDetailsModal{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="lotDetailsModalLabel{{ lot.id }}" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="lotDetailsModalLabel{{ lot.id }}">Деталі лота {{ lot.lot_number }}</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <th>Статус:</th>
+                                                    <td>
+                                                        {% if lot.status == 'wait' %}
+                                                        <span class="badge bg-info">Очікує комплектації</span>
+                                                        {% elif lot.status == 'start' %}
+                                                        <span class="badge bg-warning">В процесі комплектації</span>
+                                                        {% elif lot.status == 'packed' %}
+                                                        <span class="badge bg-success">Зібрано</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Номер палети:</th>
+                                                    <td>{{ lot.pallet_number }}</td>
+                                                </tr>
+                                                {% if lot.status == 'packed' %}
+                                                <tr>
+                                                    <th>Кількість зібраних ящиків:</th>
+                                                    <td>{{ lot.box_count or 'Не вказано' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Загальна вага:</th>
+                                                    <td>{{ lot.total_weight|round(2) if lot.total_weight else 'Не вказано' }} кг</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Комплектувальник:</th>
+                                                    <td>{{ lot.picker.username if lot.picker else 'Не вказано' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Дата/час завершення:</th>
+                                                    <td>{{ lot.completed_at.strftime('%d.%m.%Y %H:%M') if lot.completed_at else 'Не вказано' }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            </table>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрити</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <p><strong>Товари:</strong></p>
+                            <ul class="list-group list-group-flush">
+                                {% for item in pallet_items %}
+                                <li class="list-group-item">{{ item.sku }} - {{ item.quantity }} шт.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

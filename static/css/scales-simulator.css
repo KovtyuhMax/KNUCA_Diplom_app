@@ -1,0 +1,120 @@
+/* Scales Simulator Styles */
+
+/* Device Container */
+.scales-device {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border: 8px solid #333;
+    border-radius: 10px;
+    background-color: #2c3e50;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Scales Display */
+.scales-display {
+    background-color: #c5e1a5;
+    border: 3px inset #666;
+    border-radius: 5px;
+    padding: 15px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Weight Display */
+.weight-display {
+    background-color: #e8f5e9;
+    border: 1px solid #666;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.current-weight {
+    font-size: 20px;
+}
+
+/* Input Field */
+.input-field {
+    margin-bottom: 15px;
+}
+
+.input-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Weighing Result */
+.weighing-result {
+    display: none;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.sscc-code {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.barcode-container {
+    text-align: center;
+    margin: 15px 0;
+}
+
+.barcode-container svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Label Preview */
+.label-preview {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.label-header {
+    background-color: #f5f5f5;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+.label-content {
+    padding: 10px;
+}
+
+.label-row {
+    margin-bottom: 5px;
+}
+
+/* Print Button */
+.print-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.print-button:hover {
+    background-color: #45a049;
+}

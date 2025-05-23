@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3">Звіт залишки</h1>
+        <p class="text-muted">Зведені дані залишків товару</p>
+    </div>
+    <div class="col-md-6 text-right">
+        <a href="{{ url_for('inventory_report.export_inventory_report') }}" class="btn btn-success">
+            <i class="fas fa-file-excel mr-1"></i> Експортувати до Excel
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Зведення інвентаризації</h6>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="inventoryReportTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>SKU</th>
+                        <th>Назва товару</th>
+                        <th>Місцезнаходження</th>
+                        <th>Кількість ящ\шт</th>
+                        <th>Загальна вага нетто</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.storage_location }}</td>
+                        <td>{{ item.total_boxes }}</td>
+                        <td>{{ "%.2f"|format(item.total_net_weight) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-1"></i> No inventory data available.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        if (!$.fn.DataTable.isDataTable('#inventoryReportTable')) {
+            $('#inventoryReportTable').DataTable({
+                "order": [[ 0, "asc" ]],
+                "pageLength": 25,
+                "language": {
+                    "search": "Filter:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                    "infoEmpty": "Showing 0 to 0 of 0 entries",
+                    "infoFiltered": "(filtered from _MAX_ total entries)"
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

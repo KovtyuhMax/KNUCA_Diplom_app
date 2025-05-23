@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">{{ title }}</h1>
+        <p class="text-muted">{% if 'Add' in title %}Додати нове місце зберігання{% else %}Оновити деталі місця зберігання{% endif %}</p>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.row_code.label }}
+                        {{ form.row_code(class="form-control") }}
+                        <small class="form-text text-muted">Виберіть рядок з контрольованою температурою</small>
+                        {% for error in form.row_code.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.cell.label }}
+                        {{ form.cell(class="form-control", placeholder="e.g. 001") }}
+                        <small class="form-text text-muted">Номер ряду</small>
+                        {% for error in form.cell.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.level.label }}
+                        {{ form.level(class="form-control", placeholder="e.g. 01") }}
+                        <small class="form-text text-muted">Поверх</small>
+                        {% for error in form.level.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.location_type.label }}
+                {{ form.location_type(class="form-control") }}
+                <small class="form-text text-muted">Тип місця зберігання</small>
+                {% for error in form.location_type.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.description.label }}
+                {{ form.description(class="form-control", rows=3) }}
+                {% for error in form.description.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-2"></i>
+                <strong>Код місця зберігання:</strong> Код розташування буде автоматично згенеровано у форматі <code>AA-BBB-CC</code> на основі значень ряда, комірки та рівня.
+            </div>
+            
+            <div class="form-group mt-4">
+                <a href="{{ url_for('storage.storage_location_list') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Повернутись до списку
+                </a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}TSD Емулятор{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tsd-emulator.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tsd-receiving.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tsd-picking.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Емулятор терміналу збору даних (ТЗД)</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="tsd-device shadow">
+                <!-- TSD Screen -->
+                <div class="tsd-screen" id="tsd-screen">
+                    <!-- Login Screen (initial view) -->
+                    <div id="login-screen" class="screen-content active-screen">
+                        <div class="screen-header">Вхід в систему</div>
+                        <div class="screen-body">
+                            <div class="input-field">
+                                <label>Код користувача:</label>
+                                <div class="input-value" id="login-input"></div>
+                            </div>
+                            <div class="screen-message">Введіть код та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Menu Screen -->
+                    <div id="menu-screen" class="screen-content">
+                        <div class="screen-header">Головне меню</div>
+                        <div class="screen-body">
+                            <div class="menu-item" data-option="receiving">1. Прийом</div>
+                            <div class="menu-item" data-option="picking">2. Комплектування</div>
+                            <div class="menu-item" data-option="relocation">3. Переміщення</div>
+                            <div class="screen-message">Виберіть опцію (1-3) або використовуйте стрілки</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Receiving Start Screen -->
+                    <div id="receiving-start-screen" class="screen-content">
+                        <div class="screen-header">Прийом товару</div>
+                        <div class="screen-body">
+                            <div class="input-field">
+                                <label>Номер ПН:</label>
+                                <div class="input-value" id="invoice-number-input"></div>
+                                <select id="order-select" disabled style="display: none;"></select>
+                            </div>
+                            <div class="input-field">
+                                <label>Номер ВН постачальника:</label>
+                                <div class="input-value" id="supplier-invoice-input"></div>
+                            </div>
+                            <div class="input-field">
+                                <label>Дата прийому:</label>
+                                <div class="input-value" id="receiving-date-value"></div>
+                            </div>
+                            <div class="screen-message">Введіть дані та натисніть F1 для підтвердження</div>
+                        </div>
+                    </div>
+                    
+                    <!-- SSCC Entry Screen -->
+                    <div id="receiving-sscc-screen" class="screen-content">
+                        <div class="screen-header">Введення SSCC</div>
+                        <div class="screen-body">
+                            <div class="input-field">
+                                <label>SSCC код:</label>
+                                <div class="input-value" id="sscc-input"></div>
+                            </div>
+                            <div class="screen-message">Відскануйте або введіть SSCC код та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item Selection Screen -->
+                    <div id="receiving-item-screen" class="screen-content">
+                        <div class="screen-header">Вибір товару</div>
+                        <div class="screen-body">
+                            <div id="item-list" class="selection-list">
+                                <!-- Items will be populated dynamically -->
+                            </div>
+                            <div class="screen-message">Виберіть товар та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Entry Screen -->
+                    <div id="receiving-data-screen" class="screen-content">
+                        <div class="screen-header">Введення даних</div>
+                        <div class="screen-body" style="overflow-y: auto; max-height: 300px;">
+                            <div class="input-field">
+                                <label>SSCC код:</label>
+                                <div class="weight-display"" id="sscc-display"></div>
+                            </div>
+                            <div class="item-info" id="selected-item-info"></div>
+                            <div class="input-field">
+                                <label>Вага брутто (кг):</label>
+                                <div class="weight-display" id="gross-weight-display">0.00</div>
+                            </div>
+                            <div class="input-field">
+                                <label>Кількість коробок:</label>
+                                <div class="input-value" id="box-count-input"></div>
+                            </div>
+                            <div class="input-field">
+                                <label>Вага тари (кг):</label>
+                                <div class="input-value" id="box-weight-input"></div>
+                            </div>
+                            <div class="input-field">
+                                <label>Вага палети (кг):</label>
+                                <div class="input-value" id="pallet-weight-input"></div>
+                            </div>
+                            <div class="screen-message">Введіть дані та натисніть F1 для підтвердження</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Picking Screen (Initial) -->
+                    <div id="picking-screen" class="screen-content">
+                        <div class="screen-header">Комплектування</div>
+                        <div class="screen-body">
+                            <div class="screen-message">Натисніть F1 для початку комплектації</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Picking Order Screen -->
+                    <div id="picking-order-screen" class="screen-content">
+                        <div class="screen-header">Комплектування - Замовлення</div>
+                        <div class="screen-body">
+                            <div class="input-field">
+                                <label for="lotSelector">Доступні лоти:</label>
+                                <select id="lotSelector" class="form-control" onchange="onLotSelected()">
+                                  <option>Завантаження...</option>
+                                </select>
+                                <div class="input-value" id="picking-order-input"></div>
+                            </div>
+                            <div class="screen-message">Відскануйте або введіть номер замовлення та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Picking SKU Screen -->
+                    <div id="picking-sku-screen" class="screen-content">
+                        <div class="screen-header">Комплектування - Товар</div>
+                        <div class="screen-body">
+                            <div id="order-info" class="order-info"></div>
+                            <div class="input-field">
+                                <label>Код товару (SKU):</label>
+                                <div class="input-value" id="picking-sku-input"></div>
+                            </div>
+                            <div class="screen-message">Відскануйте або введіть код товару та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Picking Quantity Screen -->
+                    <div id="picking-quantity-screen" class="screen-content">
+                        <div class="screen-header">Комплектування - Кількість</div>
+                        <div class="screen-body">
+                            <div id="sku-info" class="sku-info"></div>
+                            <div class="input-field">
+                                <label>Кількість ящиків:</label>
+                                <div class="input-value" id="picking-quantity-input"></div>
+                            </div>
+                            <div class="screen-message">Введіть кількість та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Picking Result Screen -->
+                    <div id="picking-result-screen" class="screen-content">
+                        <div class="screen-header">Результат комплектації</div>
+                        <div class="screen-body">
+                            <div id="picking-result" class="picking-result"></div>
+                            <div class="screen-message">Натисніть F1 для продовження або F2 для повернення в меню</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Relocation Screen -->
+                    <div id="relocation-screen" class="screen-content">
+                        <div class="screen-header">Переміщення</div>
+                        <div class="screen-body">
+                            <div class="input-field">
+                                <label>Штрих-код товару:</label>
+                                <div class="input-value" id="relocation-input"></div>
+                            </div>
+                            <div class="screen-message">Відскануйте або введіть код та натисніть F1</div>
+                        </div>
+                    </div>
+                    
+
+                </div>
+                
+                <!-- TSD Keypad -->
+                <div class="tsd-keypad">
+                    <!-- Function Keys -->
+                    <div class="function-keys">
+                        <button class="key function-key" data-key="F1">F1</button>
+                        <button class="key function-key" data-key="F2">F2</button>
+                        <button class="key function-key" data-key="F3">F3</button>
+                        <button class="key function-key" data-key="F4">F4</button>
+                        <button class="key function-key" data-key="F5">F5</button>
+                        <button class="key function-key" data-key="F6">F6</button>
+                    </div>
+                    
+                    <!-- Arrow Keys -->
+                    <div class="arrow-keys">
+                        <div class="arrow-row">
+                            <div></div>
+                            <button class="key arrow-key" data-key="ArrowUp">↑</button>
+                            <div></div>
+                        </div>
+                        <div class="arrow-row">
+                            <button class="key arrow-key" data-key="ArrowLeft">←</button>
+                            <div></div>
+                            <button class="key arrow-key" data-key="ArrowRight">→</button>
+                        </div>
+                        <div class="arrow-row">
+                            <div></div>
+                            <button class="key arrow-key" data-key="ArrowDown">↓</button>
+                            <div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Numeric and Alphanumeric Keypad -->
+                    <div class="numeric-keypad">
+                        <div class="keypad-row">
+                            <button class="key number-key" data-key="1">1</button>
+                            <button class="key number-key" data-key="2">2</button>
+                            <button class="key number-key" data-key="3">3</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key number-key" data-key="4">4</button>
+                            <button class="key number-key" data-key="5">5</button>
+                            <button class="key number-key" data-key="6">6</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key number-key" data-key="7">7</button>
+                            <button class="key number-key" data-key="8">8</button>
+                            <button class="key number-key" data-key="9">9</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key action-key" data-key="Clear">C</button>
+                            <button class="key number-key" data-key="0">0</button>
+                            <button class="key action-key" data-key="Enter">↵</button>
+                        </div>
+                        <!-- Alphanumeric keys -->
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="A">A</button>
+                            <button class="key letter-key" data-key="B">B</button>
+                            <button class="key letter-key" data-key="C">C</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="D">D</button>
+                            <button class="key letter-key" data-key="E">E</button>
+                            <button class="key letter-key" data-key="F">F</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="G">G</button>
+                            <button class="key letter-key" data-key="H">H</button>
+                            <button class="key letter-key" data-key="I">I</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="J">J</button>
+                            <button class="key letter-key" data-key="K">K</button>
+                            <button class="key letter-key" data-key="L">L</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="M">M</button>
+                            <button class="key letter-key" data-key="N">N</button>
+                            <button class="key letter-key" data-key="O">O</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="P">P</button>
+                            <button class="key letter-key" data-key="Q">Q</button>
+                            <button class="key letter-key" data-key="R">R</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="S">S</button>
+                            <button class="key letter-key" data-key="T">T</button>
+                            <button class="key letter-key" data-key="U">U</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="V">V</button>
+                            <button class="key letter-key" data-key="W">W</button>
+                            <button class="key letter-key" data-key="X">X</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key="Y">Y</button>
+                            <button class="key letter-key" data-key="Z">Z</button>
+                            <button class="key letter-key" data-key=",">,</button>
+                        </div>
+                        <div class="keypad-row">
+                            <button class="key letter-key" data-key=".">.</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/tsd-emulator.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/tsd-validation.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/tsd-receiving.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/tsd-picking.js') }}"></script>
+{% endblock %}

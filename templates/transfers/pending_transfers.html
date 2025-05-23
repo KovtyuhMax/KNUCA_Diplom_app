@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Запити на переміщення товарів{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Запити на переміщення товарів</h1>
+    <p class="lead">Список незавершених запитів на переміщення товарів з місць зберігання до місць відбору.</p>
+
+    {% if not transfers %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Немає незавершених запитів на переміщення.
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Незавершені переміщення</h5>
+        </div>
+        <div class="card-body">
+            {% for sku, sku_transfers in grouped_transfers.items() %}
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Товар: {{ sku }}</h5>
+                        <form action="{{ url_for('transfers.confirm_all_transfers_for_sku', sku=sku) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> Підтвердити всі
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>SSCC</th>
+                                    <th>З локації</th>
+                                    <th>До локації</th>
+                                    <th>Кількість</th>
+                                    <th>Створено</th>
+                                    <th>Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transfer in sku_transfers %}
+                                <tr>
+                                    <td>{{ transfer.id }}</td>
+                                    <td>{{ transfer.sscc }}</td>
+                                    <td>{{ transfer.from_location.location_code }}</td>
+                                    <td>{{ transfer.to_location.location_code }}</td>
+                                    <td>{{ transfer.box_count }}</td>
+                                    <td>{{ transfer.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                    <td>
+                                        <form action="{{ url_for('transfers.confirm_transfer', transfer_id=transfer.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-check"></i> Підтвердити
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="container mt-4 mb-5">
+    <div class="alert alert-warning">
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Важливо!</h4>
+        <p>Підтвердження переміщення призведе до фактичного переміщення товару з місця зберігання до місця відбору.</p>
+        <p>Переконайтеся, що товар фізично переміщено перед підтвердженням операції в системі.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll('.confirm-sku-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const sku = this.dataset.sku;
+    
+            fetch(`/warehouse/pending-transfers/confirm-all-sku/${sku}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.message || 'Сталася помилка');
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}    

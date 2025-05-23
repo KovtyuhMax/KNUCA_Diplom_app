@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Замовлення №{{ order.order_number }}</h1>
+        <div>
+            <a href="{{ url_for('order.supplier_order_list') }}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left fa-sm"></i> Назад до списку
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Інформація про замовлення</h6>
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteOrderModal">
+                        <i class="fas fa-trash fa-sm"></i> Видалити замовлення
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Постачальник:</strong> {{ order.supplier.name }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Контракт:</strong> {{ order.contract.contract_number or 'Контракт #' ~ order.contract.id }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Статус:</strong> 
+                                {% if order.status == 'created' %}
+                                <span class="badge badge-info">Створено</span>
+                                {% elif order.status == 'processing' %}
+                                <span class="badge badge-warning">В обробці</span>
+                                {% elif order.status == 'completed' %}
+                                <span class="badge badge-success">Завершено</span>
+                                {% elif order.status == 'cancelled' %}
+                                <span class="badge badge-danger">Скасовано</span>
+                                {% else %}
+                                <span class="badge badge-secondary">{{ order.status }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Дата створення:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Створив:</strong> {{ order.created_by_user.username }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Товари в замовленні</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="orderItemsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Назва товару</th>
+                                    <th>Ціна за одиницю</th>
+                                    <th>Кількість</th>
+                                    <th>Сума</th>
+                                    <th>Номер накладної (ПН)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                <tr>
+                                    <td>{{ item.sku }}</td>
+                                    <td>{{ item.product_name }}</td>
+                                    <td>{{ item.unit_price or 'Не вказано' }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ (item.unit_price * item.quantity) if item.unit_price else 'Не вказано' }}</td>
+                                    <td>{{ item.invoice_number or 'Не вказано' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">Немає товарів у замовленні</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Order Modal -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1" role="dialog" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteOrderModalLabel">Підтвердження видалення</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Ви впевнені, що хочете видалити замовлення №{{ order.order_number }}? Ця дія не може бути скасована.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасувати</button>
+                <form action="{{ url_for('order.supplier_order_delete', order_id=order.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-danger">Видалити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        if (!$.fn.DataTable.isDataTable('#orderItemsTable')) {
+            $('#orderItemsTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Ukrainian.json"
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

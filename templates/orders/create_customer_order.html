@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Створення клієнтського замовлення{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Створення клієнтського замовлення</h2>
+        <a href="{{ url_for('customer_orders.customer_order_list') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад до списку
+        </a>
+    </div>
+    
+    <form method="POST" id="orderForm">
+        {{ form.hidden_tag() }}
+        
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Інформація про замовлення</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    {{ form.customer_id.label(class="form-label") }}
+                    {{ form.customer_id(class="form-select") }}
+                    {% if form.customer_id.errors %}
+                        <div class="text-danger">
+                            {% for error in form.customer_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Товарні позиції</h5>
+                <button type="button" class="btn btn-light" id="addItemBtn">
+                    <i class="fas fa-plus"></i> Додати позицію
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Вибір товару з логістичних даних -->
+                <div class="mb-4 p-3 bg-light rounded">
+                    <h6 class="mb-3">Вибір товару з логістичних даних</h6>
+                    <div class="form-group">
+                        <label for="logisticsItemSelect" class="form-label">Виберіть товар:</label>
+                        <select id="logisticsItemSelect" class="form-select">
+                            <option value="">-- Виберіть товар --</option>
+                            {% for item in logistics_items %}
+                            <option value="{{ item.sku }}" data-product-name="{{ item.product_name }}">
+                                {{ item.sku }} - {{ item.product_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="items-container">
+                    {% for item in form.items %}
+                    <div class="item-row border p-3 mb-3 rounded shadow-sm">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                {{ item.sku.label(class="form-label") }}
+                                {{ item.sku(class="form-control sku-field") }}
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                {{ item.product_name.label(class="form-label") }}
+                                {{ item.product_name(class="form-control product-name-field") }}
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                {{ item.quantity.label(class="form-label") }}
+                                {{ item.quantity(class="form-control", min="1") }}
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                {{ item.unit_price.label(class="form-label") }}
+                                {{ item.unit_price(class="form-control", min="0.01", step="0.01") }}
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end mb-2">
+                                <button type="button" class="btn btn-danger remove-item">
+                                    <i class="fas fa-trash"></i> Видалити
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group text-center">
+            {{ form.submit(class="btn btn-primary btn-lg") }}
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemsContainer = document.getElementById('items-container');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const form = document.getElementById('orderForm');
+        const logisticsItemSelect = document.getElementById('logisticsItemSelect');
+        
+        // Функція для додавання нової позиції
+        function addNewItem() {
+            const itemCount = document.querySelectorAll('.item-row').length;
+            
+            // Клонуємо першу позицію
+            const firstItem = document.querySelector('.item-row');
+            const newItem = firstItem.cloneNode(true);
+            
+            // Оновлюємо індекси полів
+            const inputs = newItem.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const name = input.getAttribute('name');
+                if (name) {
+                    const newName = name.replace(/items-\d+/, `items-${itemCount}`);
+                    input.setAttribute('name', newName);
+                    input.setAttribute('id', newName);
+                    input.value = '';
+                }
+            });
+            
+            // Додаємо обробник події для поля SKU
+            const skuField = newItem.querySelector('.sku-field');
+            if (skuField) {
+                skuField.addEventListener('blur', function() {
+                    fetchProductInfo(skuField);
+                });
+            }
+            
+            // Додаємо кнопку видалення
+            const removeBtn = newItem.querySelector('.remove-item');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    if (document.querySelectorAll('.item-row').length > 1) {
+                        newItem.remove();
+                    } else {
+                        alert('Замовлення повинно містити хоча б одну позицію');
+                    }
+                });
+            }
+            
+            // Додаємо новий елемент до контейнера
+            itemsContainer.appendChild(newItem);
+        }
+        
+        // Функція для оновлення індексів після видалення
+        function updateItemIndices() {
+            const items = document.querySelectorAll('.item-row');
+            items.forEach((item, index) => {
+                const inputs = item.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        const newName = name.replace(/items-\d+/, `items-${index}`);
+                        input.setAttribute('name', newName);
+                        input.setAttribute('id', newName);
+                    }
+                });
+            });
+        }
+        
+        // Функція для отримання інформації про товар за SKU
+        function fetchProductInfo(skuField) {
+            const sku = skuField.value.trim();
+            if (!sku) return;
+            
+            const itemRow = skuField.closest('.item-row');
+            const productNameField = itemRow.querySelector('.product-name-field');
+            
+            fetch(`/orders/api/logistics-item/${sku}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Товар не знайдено');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    productNameField.value = data.product_name;
+                })
+                .catch(error => {
+                    console.error('Помилка при отриманні даних товару:', error);
+                });
+        }
+        
+        // Обробник події для вибору товару з логістичних даних
+        logisticsItemSelect.addEventListener('change', function() {
+            if (!this.value) return;
+            
+            const sku = this.value;
+            const productName = this.options[this.selectedIndex].dataset.productName;
+            
+            // Знаходимо останню позицію або створюємо нову
+            let lastItemRow = document.querySelector('.item-row:last-child');
+            const skuField = lastItemRow.querySelector('.sku-field');
+            const productNameField = lastItemRow.querySelector('.product-name-field');
+            
+            // Якщо поля вже заповнені, створюємо нову позицію
+            if (skuField.value && productNameField.value) {
+                addNewItem();
+                lastItemRow = document.querySelector('.item-row:last-child');
+            }
+            
+            // Заповнюємо поля
+            const newSkuField = lastItemRow.querySelector('.sku-field');
+            const newProductNameField = lastItemRow.querySelector('.product-name-field');
+            const quantityField = lastItemRow.querySelector('input[name$="quantity"]');
+            
+            newSkuField.value = sku;
+            newProductNameField.value = productName;
+            quantityField.focus();
+        });
+        
+        // Додаємо обробник для кнопки додавання позиції
+        addItemBtn.addEventListener('click', addNewItem);
+        
+        // Додаємо обробники для кнопок видалення
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (document.querySelectorAll('.item-row').length > 1) {
+                    this.closest('.item-row').remove();
+                    updateItemIndices();
+                } else {
+                    alert('Замовлення повинно містити хоча б одну позицію');
+                }
+            });
+        });
+        
+        // Додаємо обробники подій для існуючих полів SKU
+        document.querySelectorAll('.sku-field').forEach(field => {
+            field.addEventListener('blur', function() {
+                fetchProductInfo(field);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <a href="{{ url_for('supplier.contract_list') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад до списку
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group">
+                    {{ form.supplier_id.label }}
+                    {{ form.supplier_id(class="form-control" + (" is-invalid" if form.supplier_id.errors else "")) }}
+                    {% for error in form.supplier_id.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.contract_number.label }}
+                    {{ form.contract_number(class="form-control" + (" is-invalid" if form.contract_number.errors else "")) }}
+                    {% for error in form.contract_number.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Необов'язкове поле для зберігання номеру контракту</small>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.valid_until.label }}
+                    {{ form.valid_until(class="form-control" + (" is-invalid" if form.valid_until.errors else ""), type="date") }}
+                    {% for error in form.valid_until.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Необов'язкова дата закінчення терміну дії</small>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.items.label }}
+                    {{ form.items(class="form-control select2" + (" is-invalid" if form.items.errors else ""), multiple="multiple", style="width: 100%;") }}
+                    {% for error in form.items.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Виберіть один або кілька товарів для контракту</small>
+                </div>
+                
+                <!-- Блок ручного введення товарів видалено -->
+                
+                <div class="form-group mt-4">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for multiple selection
+        $('.select2').select2({
+            placeholder: "Виберіть товари",
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}

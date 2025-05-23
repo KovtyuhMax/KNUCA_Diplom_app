@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Створення замовлення постачальнику</h1>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Інформація про замовлення</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="orderForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    {{ form.edrpou_code.label(class="form-control-label") }}
+                                    {{ form.edrpou_code(class="form-control", id="edrpouCode") }}
+                                    {% if form.edrpou_code.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.edrpou_code.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    {{ form.contract_id.label(class="form-control-label") }}
+                                    {{ form.contract_id(class="form-control", id="contractId") }}
+                                    {% if form.contract_id.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.contract_id.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="itemsContainer" class="mt-4" style="display: none;">
+                            <h5 class="mb-3">Товари за контрактом</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="itemsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Артикул</th>
+                                            <th>Назва товару</th>
+                                            <th>Ціна замовлення</th>
+                                            <th width="150">Кількість</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsTableBody">
+                                        <!-- Items will be populated here via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-4">
+                                {{ form.submit_order(class="btn btn-primary", id="submitBtn") }}
+                                <a href="{{ url_for('order.order_select') }}" class="btn btn-secondary ml-2">Скасувати</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // When EDRPOU code changes, fetch contracts
+        $('#edrpouCode').on('change', function() {
+            const edrpouCode = $(this).val();
+            if (edrpouCode) {
+                // Clear contract dropdown and items table
+                $('#contractId').empty();
+                $('#itemsTableBody').empty();
+                $('#itemsContainer').hide();
+                
+                // Fetch contracts for this supplier
+                $.getJSON('/orders/api/get_contracts', {edrpou_code: edrpouCode})
+                    .done(function(data) {
+                        if (data.contracts && data.contracts.length > 0) {
+                            // Add default option
+                            $('#contractId').append($('<option>', {
+                                value: '',
+                                text: 'Оберіть контракт'
+                            }));
+                            
+                            // Add contracts to dropdown
+                            $.each(data.contracts, function(i, contract) {
+                                $('#contractId').append($('<option>', {
+                                    value: contract.id,
+                                    text: contract.number
+                                }));
+                            });
+                        } else {
+                            $('#contractId').append($('<option>', {
+                                value: '',
+                                text: 'Немає контрактів для цього постачальника'
+                            }));
+                        }
+                    })
+                    .fail(function(jqXHR) {
+                        const errorMsg = jqXHR.responseJSON ? jqXHR.responseJSON.error : 'Помилка завантаження контрактів';
+                        alert(errorMsg);
+                    });
+            }
+        });
+        
+        // When contract changes, fetch items
+        $('#contractId').on('change', function() {
+            const contractId = $(this).val();
+            if (contractId) {
+                // Clear items table
+                $('#itemsTableBody').empty();
+                
+                // Fetch items for this contract
+                $.getJSON('{{ url_for("order.get_contract_items") }}', {contract_id: contractId})
+                    .done(function(data) {
+                        if (data.items && data.items.length > 0) {
+                            // Add items to table
+                            $.each(data.items, function(i, item) {
+                                const row = `
+                                    <tr>
+                                        <td>${item.sku}</td>
+                                        <td>${item.product_name}</td>
+                                        <td>
+                                            <input type="number" name="price_${item.id}" class="form-control" min="0" step="0.01" value="${item.price || ''}">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="quantity_${item.id}" class="form-control" min="1" required>
+                                        </td>
+                                    </tr>
+                                `;
+                                $('#itemsTableBody').append(row);
+                            });
+                            
+                            // Show items container
+                            $('#itemsContainer').show();
+                        } else {
+                            $('#itemsTableBody').append(`
+                                <tr>
+                                    <td colspan="4" class="text-center">Немає товарів для цього контракту</td>
+                                </tr>
+                            `);
+                            $('#itemsContainer').show();
+                        }
+                    })
+                    .fail(function(jqXHR) {
+                        const errorMsg = jqXHR.responseJSON ? jqXHR.responseJSON.error : 'Помилка завантаження товарів';
+                        alert(errorMsg);
+                    });
+            } else {
+                $('#itemsTableBody').empty();
+                $('#itemsContainer').hide();
+            }
+        });
+        
+        // Form validation
+        $('#orderForm').on('submit', function(e) {
+            let hasItems = false;
+            $('input[name^="quantity_"]').each(function() {
+                if ($(this).val() && parseInt($(this).val()) > 0) {
+                    hasItems = true;
+                    return false; // break the loop
+                }
+            });
+            
+            if (!hasItems) {
+                e.preventDefault();
+                alert('Будь ласка, вкажіть кількість хоча б для одного товару');
+            }
+        });
+    });
+</script>
+{% endblock %}

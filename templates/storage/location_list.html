@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3">Місця зберігання</h1>
+        <p class="text-muted">Керування місцями зберігання</p>
+    </div>
+    <div class="col-md-6 text-right">
+        <div class="btn-group">
+            <a href="{{ url_for('storage.storage_location_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Додати нове місце зберігання
+            </a>
+            <a href="{{ url_for('storage.storage_row_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-thermometer-half mr-1"></i> Налаштування рядів
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        {% if locations %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="storageLocationsTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Місце зберігання</th>
+                        <th>Ряд</th>
+                        <th>Ячейка</th>
+                        <th>Рівень</th>
+                        <th>Тип</th>
+                        <th>Температурний режим</th>
+                        <th>Інвентар</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for location in locations %}
+                    <tr>
+                        <td><strong>{{ location.location_code }}</strong></td>
+                        <td>
+                            {% if location.row %}
+                                <span class="badge {% if location.row.storage_type == 'ambient' %}badge-success{% elif location.row.storage_type == 'chilled' %}badge-info{% elif location.row.storage_type == 'frozen' %}badge-primary{% else %}badge-secondary{% endif %}">
+                                    {{ location.row.code }} - {{ location.row.storage_type }}
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ location.cell }}</td>
+                        <td>{{ location.level }}</td>
+                        <td>
+                            {% if location.location_type == 'picking' %}
+                                <span class="badge badge-warning">Місце відбору</span>
+                            {% elif location.location_type == 'floor' %}
+                                <span class="badge badge-secondary">Зберігання</span>
+                            {% elif location.location_type == 'upper' %}
+                                <span class="badge badge-dark">Зберігання</span>
+                            {% else %}
+                                <span class="badge badge-light">{{ location.location_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if location.row %}
+                                {{ location.row.temperature_min }}°C to {{ location.row.temperature_max }}°C
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if location.items %}
+                                {% for item in location.items %}
+                                <div class="small mb-1">
+                                    <strong>SKU:</strong> {{ item.sku }}<br>
+                                    <strong>Ящ\ШТ:</strong> {{ item.box_count|default(0) }}<br>
+                                    <strong>Вага нетто:</strong> {{ item.net_weight|default(0)|round(2) }} kg
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Пусто</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('storage.storage_location_edit', location_id=location.id) }}" class="btn btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" title="Delete" 
+                                        data-url="{{ url_for('storage.storage_location_delete', location_id=location.id) }}" onclick="confirmDelete(this)"
+                                        {% if location.items %}disabled{% endif %}>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-map-marker-alt fa-4x text-muted mb-3"></i>
+            <p class="lead">Місця зберігання не знайдено</p>
+            {% if rows_exist %}
+                <a href="{{ url_for('storage.storage_location_add') }}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-1"></i> Додайте перше місце зберігання
+                </a>
+            {% else %}
+                <a href="{{ url_for('storage.storage_row_add') }}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-1"></i> Додайте рядок зберігання спочатку
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        const table = $('#storageRowsTable');
+
+        if ($.fn.DataTable.isDataTable(table)) {
+            table.DataTable().destroy(); // 💣 якщо вже ініціалізована — знищ
+        }
+
+        table.DataTable({
+            "order": [[0, "asc"]]
+        });
+    });
+    
+    function confirmDelete(button) {
+        if ($(button).attr('disabled')) return;
+        
+        if (confirm('Ви впевнені, що хочете видалити це місце зберігання?')) {
+            $.ajax({
+                url: $(button).data('url'),
+                type: 'POST',
+                success: function(result) {
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

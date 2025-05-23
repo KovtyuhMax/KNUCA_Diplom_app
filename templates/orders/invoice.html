@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Рахунок-фактура</h1>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Інформація про рахунок</h6>
+            <a href="{{ url_for('order.supplier_order_detail', order_id=order.id) }}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left fa-sm"></i> Повернутися до замовлення
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Деталі рахунку-фактури</h5>
+                    <div class="mb-2"><strong>Номер рахунку-фактури:</strong> {{ invoice_number }}</div>
+                    <div class="mb-2"><strong>Номер ВН постачальника:</strong> {{ invoice_number_supplier }}</div>
+                    <div class="mb-2"><strong>Постачальник:</strong> {{ order.supplier.name if order.supplier else 'Н/Д' }}</div>
+                    <div class="mb-2"><strong>Дата створення:</strong> {{ order.created_at.strftime('%d.%m.%Y') }}</div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Деталі замовлення</h5>
+                    <div class="mb-2"><strong>Номер замовлення:</strong> {{ order.order_number }}</div>
+                    <div class="mb-2"><strong>Статус:</strong> 
+                        {% if order.status == 'created' %}
+                        <span class="badge badge-info">Створено</span>
+                        {% elif order.status == 'processing' %}
+                        <span class="badge badge-warning">В обробці</span>
+                        {% elif order.status == 'completed' %}
+                        <span class="badge badge-success">Завершено</span>
+                        {% elif order.status == 'cancelled' %}
+                        <span class="badge badge-danger">Скасовано</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ order.status }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2"><strong>Контракт:</strong> {{ order.contract.contract_number if order.contract else 'Н/Д' }}</div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table id="invoiceTable" class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Артикул</th>
+                            <th>Назва товару</th>
+                            <th>Кількість</th>
+                            <th>Ціна, грн</th>
+                            <th>Сума, грн</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice_items %}
+                        <tr>
+                            <td>{{ item.sku }}</td>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ "%.2f"|format(item.unit_price) }}</td>
+                            <td>{{ "%.2f"|format(item.sum) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">Немає прийнятих товарів</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="text-right">Загальна сума:</th>
+                            <th>{{ "%.2f"|format(total_sum) }} грн</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12 text-right">
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print fa-sm"></i> Друкувати
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        if (!$.fn.DataTable.isDataTable('#invoiceTable')) {
+            $('#invoiceTable').DataTable({
+                "paging": false,
+                "info": false,
+                "searching": false,
+                "language": {
+                    "emptyTable": "Немає прийнятих товарів",
+                    "zeroRecords": "Нічого не знайдено"
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

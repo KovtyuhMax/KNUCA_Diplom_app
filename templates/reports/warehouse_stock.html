@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3">Залишки на складі</h1>
+        <p class="text-muted">Агреговані дані по SKU з усіх отриманих палет</p>
+    </div>
+    <div class="col-md-6 text-right">
+        <a href="{{ url_for('warehouse_stock.export_warehouse_stock') }}" class="btn btn-success">
+            <i class="fas fa-file-excel mr-1"></i> Експорт в Excel
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Зведена таблиця залишків</h6>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="warehouseStockTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>SKU</th>
+                        <th>Назва товару</th>
+                        <th>Загальна кількість ящиків</th>
+                        <th>Загальна вага (кг)</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.total_boxes }}</td>
+                        <td>{{ "%.2f"|format(item.total_weight) }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info view-pallets" data-sku="{{ item.sku }}">
+                                <i class="fas fa-boxes mr-1"></i> Переглянути палети
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-1"></i> Немає даних про залишки на складі.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальне вікно для відображення деталей палет -->
+<div class="modal fade" id="palletsModal" tabindex="-1" role="dialog" aria-labelledby="palletsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="palletsModalLabel">Палети для SKU: <span id="modalSkuLabel"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="palletsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>SSCC</th>
+                                <th>Кількість ящиків</th>
+                                <th>Вага (кг)</th>
+                                <th>Місце зберігання</th>
+                                <th>Дата отримання</th>
+                                <th>Термін придатності</th>
+                                <th>Номер накладної</th>
+                            </tr>
+                        </thead>
+                        <tbody id="palletsTableBody">
+                            <!-- Дані будуть додані через JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noPalletsMessage" class="alert alert-info d-none">
+                    <i class="fas fa-info-circle mr-1"></i> Немає даних про палети для цього SKU.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрити</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Ініціалізація таблиці з DataTables
+        if (!$.fn.DataTable.isDataTable('#warehouseStockTable')) {
+            $('#warehouseStockTable').DataTable({
+                "order": [[ 0, "asc" ]],
+                "pageLength": 25,
+                "language": {
+                    "search": "Фільтр:",
+                    "lengthMenu": "Показати _MENU_ записів",
+                    "info": "Показано _START_ до _END_ з _TOTAL_ записів",
+                    "infoEmpty": "Показано 0 до 0 з 0 записів",
+                    "infoFiltered": "(відфільтровано з _MAX_ записів)",
+                    "paginate": {
+                        "first": "Перша",
+                        "last": "Остання",
+                        "next": "Наступна",
+                        "previous": "Попередня"
+                    }
+                }
+            });
+        }
+        
+        // Обробник кліку на кнопку "Переглянути палети"
+        $('.view-pallets').on('click', function() {
+            const sku = $(this).data('sku');
+            $('#modalSkuLabel').text(sku);
+            
+            // Очищення таблиці палет
+            $('#palletsTableBody').empty();
+            
+            // Запит на отримання даних про палети
+            $.ajax({
+                url: '/warehouse/stock/details',
+                method: 'GET',
+                data: { sku: sku },
+                success: function(response) {
+                    if (response.success && response.pallets && response.pallets.length > 0) {
+                        // Заповнення таблиці даними про палети
+                        response.pallets.forEach(function(pallet) {
+                            $('#palletsTableBody').append(`
+                                <tr>
+                                    <td>${pallet.sscc}</td>
+                                    <td>${pallet.box_count}</td>
+                                    <td>${pallet.net_weight.toFixed(2)}</td>
+                                    <td>${pallet.storage_location}</td>
+                                    <td>${pallet.received_at}</td>
+                                    <td>${pallet.expiry_date}</td>
+                                    <td>${pallet.invoice_number}</td>
+                                </tr>
+                            `);
+                        });
+                        
+                        // Показати таблицю, приховати повідомлення про відсутність даних
+                        $('#palletsTable').removeClass('d-none');
+                        $('#noPalletsMessage').addClass('d-none');
+                    } else {
+                        // Приховати таблицю, показати повідомлення про відсутність даних
+                        $('#palletsTable').addClass('d-none');
+                        $('#noPalletsMessage').removeClass('d-none');
+                    }
+                    
+                    // Відкриття модального вікна
+                    $('#palletsModal').modal('show');
+                },
+                error: function() {
+                    alert('Помилка при отриманні даних про палети');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

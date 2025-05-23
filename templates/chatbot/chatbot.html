@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}AI-чатбот WMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        max-width: 80%;
+        position: relative;
+    }
+    
+    .user-message {
+        background-color: #007bff;
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 0.25rem;
+    }
+    
+    .bot-message {
+        background-color: #e9ecef;
+        color: #212529;
+        margin-right: auto;
+        border-bottom-left-radius: 0.25rem;
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        margin-top: 0.25rem;
+        text-align: right;
+    }
+    
+    .chat-input {
+        display: flex;
+    }
+    
+    .chat-input input {
+        flex: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .chat-input button {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 0.5rem;
+        background-color: #e9ecef;
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+        width: fit-content;
+    }
+    
+    .typing-indicator span {
+        display: inline-block;
+        width: 0.5rem;
+        height: 0.5rem;
+        background-color: #6c757d;
+        border-radius: 50%;
+        margin-right: 0.25rem;
+        animation: typing 1s infinite;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+        margin-right: 0;
+    }
+    
+    @keyframes typing {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-0.5rem); }
+    }
+    
+    .features-list {
+        margin-top: 1.5rem;
+    }
+    
+    .features-list h5 {
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+    
+    .features-list ul {
+        padding-left: 1.5rem;
+    }
+    
+    .features-list li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .example-queries {
+        margin-top: 1rem;
+    }
+    
+    .example-query {
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+        background-color: #e9ecef;
+        border-radius: 1rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+        transition: background-color 0.2s;
+    }
+    
+    .example-query:hover {
+        background-color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot mr-2"></i>AI-чатбот WMS системи
+                    </h5>
+                </div>
+                <div class="card-body chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot-message">
+                            <div class="message-content">Вітаю! Я AI-асистент WMS системи. Чим можу допомогти вам сьогодні?</div>
+                            <div class="message-time">{{ now.strftime('%H:%M') }}</div>
+                        </div>
+                        <div class="typing-indicator" id="typingIndicator">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" class="form-control" id="userInput" placeholder="Введіть ваше запитання..." autocomplete="off">
+                        <button class="btn btn-primary" id="sendButton">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle mr-2"></i>Можливості чатбота
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="features-list">
+                        <h5>Чатбот може допомогти з:</h5>
+                        <ul>
+                            <li>Пошуком інформації по складу</li>
+                            <li>Роботою з замовленнями постачальників і клієнтів</li>
+                            <li>Відстеженням лотів</li>
+                            <li>Переміщенням товарів</li>
+                            <li>Аналітикою та звітами</li>
+                            <li>Роботою з постачальниками та контрактами</li>
+                        </ul>
+                    </div>
+                    <div class="example-queries">
+                        <h5>Приклади запитів:</h5>
+                        <div class="example-query" data-query="Знайти товар за артикулом ABC123">Знайти товар за артикулом ABC123</div>
+                        <div class="example-query" data-query="Показати статус замовлення №12345">Показати статус замовлення №12345</div>
+                        <div class="example-query" data-query="Створити замовлення на 10 кг яблук">Створити замовлення на 10 кг яблук</div>
+                        <div class="example-query" data-query="Показати топ-5 товарів за тиждень">Показати топ-5 товарів за тиждень</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% endblock %}

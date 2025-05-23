@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3">Складські ряди</h1>
+        <p class="text-muted">Керування рядами складських приміщень та температурними зонами</p>
+    </div>
+    <div class="col-md-6 text-right">
+        <a href="{{ url_for('storage.storage_row_add') }}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i> Додати новий ряд
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        {% if rows %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="storageRowsTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Code</th>
+                        <th>Назва</th>
+                        <th>Температурний режим</th>
+                        <th>Тип зберігання</th>
+                        <th>Кількість клітинок</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.code }}</td>
+                        <td>{{ row.name or '-' }}</td>
+                        <td>{{ row.temperature_min }}°C to {{ row.temperature_max }}°C</td>
+                        <td>
+                            {% if row.storage_type == 'ambient' %}
+                                <span class="badge badge-success">Ambient</span>
+                            {% elif row.storage_type == 'chilled' %}
+                                <span class="badge badge-info">Chilled</span>
+                            {% elif row.storage_type == 'frozen' %}
+                                <span class="badge badge-primary">Frozen</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ row.storage_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ row.locations|length }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('storage.storage_row_edit', row_code=row.code) }}" class="btn btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" title="Delete" 
+                                        data-url="{{ url_for('storage.storage_row_delete', row_code=row.code) }}" onclick="confirmDelete(this)"
+                                        {% if row.locations %}disabled{% endif %}>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-thermometer-half fa-4x text-muted mb-3"></i>
+            <p class="lead">Жожного ряду не знайдено</p>
+            <a href="{{ url_for('storage.storage_row_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Додати перший ряд
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        const table = $('#storageRowsTable');
+
+        if ($.fn.DataTable.isDataTable(table)) {
+            table.DataTable().destroy(); // 💣 якщо вже ініціалізована — знищ
+        }
+
+        table.DataTable({
+            "order": [[0, "asc"]]
+        });
+    });
+    
+    function confirmDelete(button) {
+        if ($(button).attr('disabled')) return;
+        
+        if (confirm('Ви впевнені, що хочете видалити цей рядок сховища?')) {
+            $.ajax({
+                url: $(button).data('url'),
+                type: 'POST',
+                success: function(result) {
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

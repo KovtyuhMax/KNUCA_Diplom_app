@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <div>
+            <a href="{{ url_for('supplier.contract_list') }}" class="btn btn-info mr-2">
+                <i class="fas fa-file-contract"></i> Контракти
+            </a>
+            <a href="{{ url_for('supplier.supplier_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Додати постачальника
+            </a>
+        </div>
+    </div>
+
+    {% if suppliers %}
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Назва</th>
+                            <th>Код ЄДРПОУ</th>
+                            <th>Адреса</th>
+                            <th>Дата створення</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for supplier in suppliers %}
+                        <tr>
+                            <td>{{ supplier.name }}</td>
+                            <td>{{ supplier.edrpou_code }}</td>
+                            <td>{{ supplier.address }}</td>
+                            <td>{{ supplier.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('supplier.supplier_contracts', supplier_id=supplier.id) }}" class="btn btn-sm btn-info" title="Контракти">
+                                        <i class="fas fa-file-contract"></i>
+                                    </a>
+                                    <a href="{{ url_for('supplier.supplier_edit', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-primary" title="Редагувати">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Видалити" 
+                                            onclick="confirmDelete('{{ url_for('supplier.supplier_delete', supplier_id=supplier.id) }}', '{{ supplier.name}}');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Постачальників ще не додано. Натисніть кнопку "Додати постачальника" щоб створити першого.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Підтвердження видалення</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Ви впевнені, що хочете видалити постачальника <span id="supplierName" class="font-weight-bold"></span>?
+                <p class="text-danger mt-2">Увага: Це також видалить усі пов'язані контракти!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасувати</button>
+                <form id="deleteForm" method="post">
+                    <button type="submit" class="btn btn-danger">Видалити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(url, name) {
+        document.getElementById('deleteForm').action = url;
+        document.getElementById('supplierName').textContent = name;
+        $('#deleteModal').modal('show');
+    }
+</script>
+{% endblock %}

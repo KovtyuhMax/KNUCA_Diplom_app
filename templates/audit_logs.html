@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Журнал дій користувачів</h1>
+    
+    <!-- Фільтри -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Фільтри</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('audit_logs') }}" id="filter-form">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="date_from">Дата від:</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.args.get('date_from', '') }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="date_to">Дата до:</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.args.get('date_to', '') }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="user">Користувач:</label>
+                        <select class="form-control" id="user" name="user_id">
+                            <option value="">Всі користувачі</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}" {% if request.args.get('user_id')|int == user.id %}selected{% endif %}>{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="action">Тип дії:</label>
+                        <select class="form-control" id="action" name="action">
+                            <option value="">Всі дії</option>
+                            {% for action_type in action_types %}
+                            <option value="{{ action_type }}" {% if request.args.get('action') == action_type %}selected{% endif %}>{{ action_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search mr-1"></i> Застосувати фільтри
+                        </button>
+                        <a href="{{ url_for('audit_logs') }}" class="btn btn-secondary ml-2">
+                            <i class="fas fa-undo mr-1"></i> Скинути фільтри
+                        </a>
+                        <button type="button" class="btn btn-success float-right" id="export-csv">
+                            <i class="fas fa-file-csv mr-1"></i> Експорт CSV
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Таблиця журналу дій -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-history mr-2"></i>Історія дій</h5>
+        </div>
+        <div class="card-body">
+            {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="audit-logs-table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Дата та час</th>
+                            <th>Користувач</th>
+                            <th>Посада</th>
+                            <th>Дія</th>
+                            <th>Деталі</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs.items %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                            <td>{{ log.user.username }}</td>
+                            <td>
+                                {% if log.user.position %}
+                                    {{ log.user.position.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ log.action }}</td>
+                            <td>{{ log.details or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Пагінація -->
+            <nav aria-label="Навігація по сторінках">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if logs.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('audit_logs', page=logs.prev_num, date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), user_id=request.args.get('user_id', ''), action=request.args.get('action', '')) }}">
+                            <i class="fas fa-chevron-left"></i> Попередня
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-left"></i> Попередня</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == logs.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('audit_logs', page=page_num, date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), user_id=request.args.get('user_id', ''), action=request.args.get('action', '')) }}">{{ page_num }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if logs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('audit_logs', page=logs.next_num, date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), user_id=request.args.get('user_id', ''), action=request.args.get('action', '')) }}">
+                            Наступна <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Наступна <i class="fas fa-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-2"></i> Записів не знайдено. Спробуйте змінити параметри фільтрації.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript для експорту в CSV -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('export-csv').addEventListener('click', function() {
+            // Отримуємо поточні параметри фільтрації
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Додаємо параметр експорту
+            urlParams.set('export', 'csv');
+            
+            // Перенаправляємо на URL з параметром експорту
+            window.location.href = '{{ url_for("audit_logs") }}?' + urlParams.toString();
+        });
+    });
+</script>
+{% endblock %}

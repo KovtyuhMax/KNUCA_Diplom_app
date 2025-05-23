@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Деталі контракту</h1>
+        <div>
+            <a href="{{ url_for('supplier.contract_list') }}" class="btn btn-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> Назад до списку
+            </a>
+            <a href="{{ url_for('supplier.contract_edit', contract_id=contract.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Редагувати
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Інформація про контракт</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Постачальник:</strong> {{ contract.supplier.name }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Номер контракту:</strong> {{ contract.contract_number or 'Не вказано' }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Дійсний до:</strong> {{ contract.valid_until.strftime('%d.%m.%Y') if contract.valid_until else 'Безстроковий' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="mb-3">Товари в контракті</h3>
+
+    {% if contract.items %}
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>SKU</th>
+                            <th>Назва</th>
+                            <th>Кількість</th>
+                            <th>Ціна за одиницю</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in contract.items %}
+                        <tr>
+                            <td>{{ item.sku }}</td>
+                            <td>{{ item.inventory_item.name if item.inventory_item else 'Товар додано вручну' }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.unit_price if item.unit_price else 'Не вказано' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Цей контракт не містить жодних товарів.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

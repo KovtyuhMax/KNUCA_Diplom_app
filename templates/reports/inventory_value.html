@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">Inventory Value Report</h1>
+        <p class="text-muted">Total value of inventory in stock</p>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Summary</h6>
+        <div class="text-right">
+            <h5>Total Value: <span class="text-success">${{ "%.2f"|format(total_value) }}</span></h5>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="inventoryValueTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>SKU</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>
+                            {% if item.storage_location %}
+                                <span class="badge {% if item.storage_location.row.storage_type == 'ambient' %}badge-success{% elif item.storage_location.row.storage_type == 'chilled' %}badge-info{% elif item.storage_location.row.storage_type == 'frozen' %}badge-primary{% else %}badge-secondary{% endif %}">
+                                    {{ item.storage_location.location_code }}
+                                </span>
+                            {% elif item.location %}
+                                {{ item.location.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                        <td>${{ "%.2f"|format(item.total_value) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <th colspan="6" class="text-right">Total Inventory Value:</th>
+                        <th>${{ "%.2f"|format(total_value) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-2"></i> No inventory items found.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Value Distribution Chart -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Value by Category</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Value by Location</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print and Export Options -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Report Options</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-outline-secondary" onclick="window.print()">
+                    <i class="fas fa-print mr-1"></i> Print Report
+                </button>
+            </div>
+            <div class="col-md-6 text-right">
+                <button class="btn btn-outline-primary" id="exportCSV">
+                    <i class="fas fa-file-csv mr-1"></i> Export to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .footer, .card-header button, #exportCSV {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+    }
+    .card-header {
+        background-color: #f8f9fc !important;
+        border-bottom: 1px solid #e3e6f0 !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#inventoryValueTable').DataTable({
+            "order": [[ 6, "desc" ]],
+            "footerCallback": function(row, data, start, end, display) {
+                var api = this.api();
+                var total = {{ total_value|tojson }};
+                
+                $(api.column(6).footer()).html('$' + total.toFixed(2));
+            }
+        });
+        
+        // Simple CSV export function
+        $('#exportCSV').on('click', function() {
+            let csv = [];
+            const rows = document.querySelectorAll('table tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll('td, th');
+                
+                for (let j = 0; j < cols.length; j++) {
+                    let text = cols[j].innerText.replace(/\r?\n/g, ' ');
+                    row.push('"' + text + '"');
+                }
+                csv.push(row.join(','));
+            }
+            
+            const csvFile = new Blob([csv.join('\n')], {type: 'text/csv'});
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(csvFile);
+            downloadLink.download = 'inventory_value_report.csv';
+            downloadLink.click();
+        });
+        
+        // Create charts if there are items
+        {% if items %}
+        // Prepare data for category chart
+        const categoryData = {};
+        const locationData = {};
+        
+        {% for item in items %}
+            // Category data
+            // Category data removed
+            const itemValue = {{ (item.quantity * item.unit_price)|tojson }};
+            
+            if (categoryData[category]) {
+                categoryData[category] += itemValue;
+            } else {
+                categoryData[category] = itemValue;
+            }
+            
+            // Location data
+            const location = {{ (item.location.name if item.location else 'Unassigned')|tojson }};
+            
+            if (locationData[location]) {
+                locationData[location] += itemValue;
+            } else {
+                locationData[location] = itemValue;
+            }
+        {% endfor %}
+        
+        // Generate random colors
+        function getRandomColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = (i * 137) % 360; // Use golden angle to get evenly distributed colors
+                colors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            return colors;
+        }
+        
+        // Create category chart
+        const categoryLabels = Object.keys(categoryData);
+        const categoryValues = Object.values(categoryData);
+        const categoryColors = getRandomColors(categoryLabels.length);
+        
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'pie',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryValues,
+                    backgroundColor: categoryColors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `$${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Create location chart
+        const locationLabels = Object.keys(locationData);
+        const locationValues = Object.values(locationData);
+        const locationColors = getRandomColors(locationLabels.length);
+        
+        new Chart(document.getElementById('locationChart'), {
+            type: 'pie',
+            data: {
+                labels: locationLabels,
+                datasets: [{
+                    data: locationValues,
+                    backgroundColor: locationColors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `$${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

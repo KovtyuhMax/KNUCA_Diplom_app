@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">{{ title }}</h1>
+        <p class="text-muted">{% if 'Add' in title %}Додати новий рядок сховища з температурними обмеженнями{% else %}Оновити деталі рядка сховища{% endif %}</p>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.code.label }}
+                        {{ form.code(class="form-control") }}
+                        <small class="form-text text-muted">Код ряду</small>
+                        {% for error in form.code.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.name.label }}
+                        {{ form.name(class="form-control") }}
+                        <small class="form-text text-muted">Необов'язкова описова назва</small>
+                        {% for error in form.name.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.temperature_min.label }}
+                        {{ form.temperature_min(class="form-control") }}
+                        {% for error in form.temperature_min.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.temperature_max.label }}
+                        {{ form.temperature_max(class="form-control") }}
+                        {% for error in form.temperature_max.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.storage_type.label }}
+                {{ form.storage_type(class="form-control") }}
+                <small class="form-text text-muted">Температурний режим для цього ряду</small>
+                {% for error in form.storage_type.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group mt-4">
+                <a href="{{ url_for('storage.storage_row_list') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Повернутись до списку
+                </a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>{{ title }}</h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.sku.label(class="form-control-label") }}
+                        {{ form.sku(class="form-control") }}
+                        {% if form.sku.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.sku.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.product_name.label(class="form-control-label") }}
+                        {{ form.product_name(class="form-control") }}
+                        {% if form.product_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.product_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+
+            
+
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.packaging_unit_type.label(class="form-control-label") }}
+                        {{ form.packaging_unit_type(class="form-control") }}
+                        {% if form.packaging_unit_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.packaging_unit_type.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.dimension_unit.label(class="form-control-label") }}
+                        {{ form.dimension_unit(class="form-control") }}
+                        {% if form.dimension_unit.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.dimension_unit.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.length.label(class="form-control-label") }}
+                        {{ form.length(class="form-control") }}
+                        {% if form.length.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.length.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.width.label(class="form-control-label") }}
+                        {{ form.width(class="form-control") }}
+                        {% if form.width.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.width.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.height.label(class="form-control-label") }}
+                        {{ form.height(class="form-control") }}
+                        {% if form.height.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.height.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.count.label(class="form-control-label") }}
+                        {{ form.count(class="form-control") }}
+                        {% if form.count.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.count.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.storage_type.label(class="form-control-label") }}
+                        {{ form.storage_type(class="form-control") }}
+                        {% if form.storage_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.storage_type.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.temperature_range.label(class="form-control-label") }}
+                        {{ form.temperature_range(class="form-control", placeholder="Наприклад: 6") }}
+                        {% if form.temperature_range.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.temperature_range.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.shelf_life.label(class="form-control-label") }}
+                        {{ form.shelf_life(class="form-control") }}
+                        {% if form.shelf_life.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.shelf_life.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mt-4">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('logistics_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-1"></i>Назад
+                    </a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

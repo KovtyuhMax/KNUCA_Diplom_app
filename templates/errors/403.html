@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4><i class="fas fa-exclamation-triangle mr-2"></i>Доступ заборонено</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="display-1 text-danger">403</h1>
+                    <p class="lead">У вас немає прав доступу до цієї сторінки</p>
+                    <p>Ваша посада не має необхідних прав для доступу до запитаного ресурсу.</p>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-home mr-1"></i>Повернутися на головну
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

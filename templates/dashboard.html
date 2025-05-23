@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Position-based welcome message -->
+<div class="alert alert-info">
+    <h4 class="alert-heading"><i class="fas fa-user-tag mr-2"></i>Вітаємо, {{ current_user.username }}!</h4>
+    {% if user_position %}
+        <p>Ви увійшли як <strong>{{ user_position }}</strong></p>
+        {% if user_position == 'Приймальник' %}
+            <p>У вас є доступ до операцій з приймання товарів та управління транзакціями.</p>
+        {% elif user_position == 'Комплектувальник' %}
+            <p>У вас є доступ до операцій з комплектування замовлень та відвантаження товарів.</p>
+        {% elif user_position in ['Менеджер з закупівель', 'Аналітик'] %}
+            <p>У вас є доступ до звітів про запаси, замовлення та аналітичних даних.</p>
+        {% elif user_position in ['Оператор', 'Начальник зміни', 'Керівник'] %}
+            <p>У вас є повний доступ до всіх функцій системи.</p>
+        {% else %}
+            <p>Ваш рівень доступу обмежений. Зверніться до адміністратора для отримання додаткових прав.</p>
+        {% endif %}
+    {% endif %}
+</div>
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">Панель управління</h1>
+        <p class="text-muted">Огляд складських операцій</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Загальна кількість товарів</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_items }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Товари з низьким запасом</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ low_stock_items }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Загальна кількість місць зберігання</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_locations }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Активність системи</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-center text-muted my-4">Інформація про останню активність буде відображатися тут.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if user_position in ['Оператор', 'Начальник зміни', 'Керівник'] or current_user.is_admin %}
+                    <!-- Full access users see all actions -->
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('storage.sku_picking_location_add') }}" class="btn btn-secondary btn-block">
+                            <i class="fas fa-plus mr-1"></i> Прив'язати місце відбору
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('order.order_select') }}" class="btn btn-secondary btn-block">
+                            <i class="fas fa-plus mr-1"></i> Створити замовлення
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('inventory_list') }}" class="btn btn-warning btn-block">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Звіт з залишків
+                        </a>
+                    </div>
+                    {% elif user_position == 'Приймальник' %}
+                    <!-- Receivers see limited actions -->
+                    <div class="col-md-12 mb-3">
+                        <p class="text-center text-muted">Функціональність транзакцій видалена з системи.</p>
+                    </div>
+                    {% elif user_position == 'Комплектувальник' %}
+                    <!-- Pickers see limited actions -->
+                    <div class="col-md-12 mb-3">
+                        <p class="text-center text-muted">Функціональність транзакцій видалена з системи.</p>
+                    </div>
+                    {% elif user_position in ['Менеджер з закупівель', 'Аналітик'] %}
+                    <!-- Analysts and Purchasing Managers only see report-related actions -->
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('report_low_stock') }}" class="btn btn-warning btn-block">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Звіт про низькі запаси
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('report_inventory_value') }}" class="btn btn-primary btn-block">
+                            <i class="fas fa-dollar-sign mr-1"></i> Звіт про вартість запасів
+                        </a>
+                    </div>
+                    {% else %}
+                    <!-- Default actions for other users -->
+                    <div class="col-md-12 mb-3">
+                        <p class="text-center text-muted">Немає доступних швидких дій для вашої ролі.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Оновлення кількості товарів з низьким запасом кожну хвилину
+    setInterval(function() {
+        fetch('/api/low_stock_count')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.text-warning + .h5').textContent = data.count;
+            });
+    }, 60000);
+</script>
+{% endblock %}

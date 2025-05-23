@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ title }}</h1>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ 'Редагувати' if form.sku.data else 'Додати' }} місце відбору</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group">
+                    {{ form.sku.label(class="form-control-label") }}
+                    {% if skus %}
+                    <select name="sku" id="sku" class="form-control{% if form.sku.errors %} is-invalid{% endif %}">
+                        <option value="">-- Оберіть артикул --</option>
+                        {% for sku, product_name in skus %}
+                        <option value="{{ sku }}" {% if form.sku.data == sku %}selected{% endif %}>{{ sku }} - {{ product_name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    {{ form.sku(class="form-control" + (" is-invalid" if form.sku.errors else "")) }}
+                    {% endif %}
+                    {% for error in form.sku.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.picking_location_id.label(class="form-control-label") }}
+                    {{ form.picking_location_id(class="form-control" + (" is-invalid" if form.picking_location_id.errors else "")) }}
+                    {% for error in form.picking_location_id.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Відображаються лише місця розташування рівня 01 (комплектування). Це фіксовані місця розташування, де SKU будуть розміщені під час отримання..</small>
+                </div>
+                
+                <div class="form-group mt-4">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('storage.sku_picking_location_list') }}" class="btn btn-secondary">Відміна</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+    </div>
+</div>
+{% endblock %}

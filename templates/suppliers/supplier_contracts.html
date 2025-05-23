@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <div>
+            <a href="{{ url_for('supplier.supplier_list') }}" class="btn btn-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> Назад до постачальників
+            </a>
+            <a href="{{ url_for('supplier.contract_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Додати контракт
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Інформація про постачальника</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Назва:</strong> {{ supplier.name }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Код ЄДРПОУ:</strong> {{ supplier.edrpou_code }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Адреса:</strong> {{ supplier.address }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="mb-3">Контракти постачальника</h3>
+
+    {% if contracts %}
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Номер контракту</th>
+                            <th>Дійсний до</th>
+                            <th>Кількість товарів</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                        <tr>
+                            <td>{{ contract.contract_number or 'Не вказано' }}</td>
+                            <td>{{ contract.valid_until.strftime('%d.%m.%Y') if contract.valid_until else 'Безстроковий' }}</td>
+                            <td>{{ contract.items|length }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('supplier.contract_edit', contract_id=contract.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ contract.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Для цього постачальника ще не додано контрактів. Натисніть кнопку "Додати контракт" щоб створити перший.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Підтвердження видалення</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Ви впевнені, що хочете видалити контракт для матеріалу <span id="contractName" class="font-weight-bold"></span>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасувати</button>
+                <form id="deleteForm" method="post">
+                    <button type="submit" class="btn btn-danger">Видалити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(url, name) {
+        document.getElementById('deleteForm').action = url;
+        document.getElementById('contractName').textContent = name;
+        $('#deleteModal').modal('show');
+    }
+</script>
+{% endblock %}

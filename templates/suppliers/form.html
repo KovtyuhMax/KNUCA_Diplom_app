@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <a href="{{ url_for('supplier.supplier_list') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад до списку
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group">
+                    {{ form.name.label }}
+                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                    {% for error in form.name.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Повна назва постачальника</small>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.edrpou_code.label }}
+                    {{ form.edrpou_code(class="form-control" + (" is-invalid" if form.edrpou_code.errors else "")) }}
+                    {% for error in form.edrpou_code.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Унікальний код ЄДРПОУ (8-10 символів)</small>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.address.label }}
+                    {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows=3) }}
+                    {% for error in form.address.errors %}
+                    <div class="invalid-feedback">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Повна адреса постачальника</small>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

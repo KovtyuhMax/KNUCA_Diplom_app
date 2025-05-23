@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">Low Stock Report</h1>
+        <p class="text-muted">Items below minimum stock level</p>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="lowStockTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>SKU</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Current Stock</th>
+                        <th>Min Stock Level</th>
+                        <th>Shortage</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>
+                            {% if item.storage_location %}
+                                <span class="badge {% if item.storage_location.row.storage_type == 'ambient' %}badge-success{% elif item.storage_location.row.storage_type == 'chilled' %}badge-info{% elif item.storage_location.row.storage_type == 'frozen' %}badge-primary{% else %}badge-secondary{% endif %}">
+                                    {{ item.storage_location.location_code }}
+                                </span>
+                            {% elif item.location %}
+                                {{ item.location.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.min_stock_level }}</td>
+                        <td class="text-danger font-weight-bold">{{ item.min_stock_level - item.quantity }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('inventory_edit', item_id=item.id) }}" class="btn btn-info" title="Edit Item">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('transaction_add') }}" class="btn btn-success" title="Add Transaction">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle mr-2"></i> All items are above their minimum stock levels.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Print and Export Options -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Report Options</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-outline-secondary" onclick="window.print()">
+                    <i class="fas fa-print mr-1"></i> Print Report
+                </button>
+            </div>
+            <div class="col-md-6 text-right">
+                <button class="btn btn-outline-primary" id="exportCSV">
+                    <i class="fas fa-file-csv mr-1"></i> Export to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#lowStockTable').DataTable({
+            "order": [[ 5, "desc" ]]
+        });
+        
+        // Simple CSV export function
+        $('#exportCSV').on('click', function() {
+            let csv = [];
+            const rows = document.querySelectorAll('table tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll('td, th');
+                
+                for (let j = 0; j < cols.length - 1; j++) { // Skip the Actions column
+                    let text = cols[j].innerText.replace(/\r?\n/g, ' ');
+                    row.push('"' + text + '"');
+                }
+                csv.push(row.join(','));
+            }
+            
+            const csvFile = new Blob([csv.join('\n')], {type: 'text/csv'});
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(csvFile);
+            downloadLink.download = 'low_stock_report.csv';
+            downloadLink.click();
+        });
+    });
+</script>
+{% endblock %}

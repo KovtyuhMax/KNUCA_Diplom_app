@@ -1,0 +1,36 @@
+/* Стилі для модуля комплектації в ТЗД емуляторі */
+
+/* Виділення адреси зберігання */
+.storage-location {
+    background-color: #ffeb3b;
+    padding: 5px;
+    margin-top: 5px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Стилі для підказки про F5 */
+.next-item-hint {
+    margin-top: 10px;
+    color: #2196F3;
+    font-weight: bold;
+}
+
+/* Стилі для повідомлення про завершення лота */
+.all-picked {
+    margin-top: 10px;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Покращення стилів для екрану кількості */
+#picking-quantity-screen .screen-message {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Стилі для поля введення кількості */
+#picking-quantity-input {
+    border: 2px solid #2196F3;
+    background-color: #f5f5f5;
+}

@@ -1,0 +1,129 @@
+/* TSD Receiving Flow CSS */
+
+/* Item selection list */
+.selection-list {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.item-option {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.item-option:hover {
+    background-color: #f5f5f5;
+}
+
+.item-option.selected {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Item info display */
+.item-info {
+    background-color: #f8f9fa;
+    padding: 5px;
+    margin-bottom: 10px;
+    border-left: 3px solid #007bff;
+    font-weight: bold;
+    word-wrap: break-word;
+}
+
+/* Input fields for receiving */
+#receiving-start-screen .input-field,
+#receiving-sscc-screen .input-field,
+#receiving-data-screen .input-field {
+    margin-bottom: 10px;
+}
+
+/* Scrollable screen body */
+#receiving-data-screen .screen-body {
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f0f0f0;
+}
+
+#receiving-data-screen .screen-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#receiving-data-screen .screen-body::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+#receiving-data-screen .screen-body::-webkit-scrollbar-thumb {
+    background-color: #007bff;
+    border-radius: 3px;
+}
+
+/* SSCC display */
+#sscc-display {
+    font-weight: bold;
+    word-break: break-all;
+}
+
+/* Message styling */
+.message-success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.message-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.message-warning {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+/* Date display */
+#receiving-date-value {
+    background-color: #e9ecef;
+}
+
+/* Confirmation overlay */
+.confirmation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.confirmation-box {
+    background-color: #fff;
+    border: 2px solid #007bff;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.confirmation-message {
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.confirmation-instructions {
+    font-size: 16px;
+    color: #6c757d;
+}
+
+/* Gross weight display */
+#gross-weight-display {
+    background-color: #e9ecef;
+    padding: 5px;
+    font-weight: bold;
+}

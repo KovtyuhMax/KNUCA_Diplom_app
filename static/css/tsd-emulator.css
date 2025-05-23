@@ -1,0 +1,377 @@
+/* TSD Emulator Styles */
+
+/* Device Container */
+.tsd-device {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border: 8px solid #333;
+    border-radius: 10px;
+    background-color: #2c3e50;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* TSD Screen */
+.tsd-screen {
+    background-color: #c5e1a5;
+    border: 3px inset #666;
+    border-radius: 5px;
+    height: 300px;
+    margin-bottom: 15px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    color: #333;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Screen Content */
+.screen-content {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+}
+
+.active-screen {
+    display: flex;
+}
+
+/* Screen Header */
+.screen-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 5px;
+    border-bottom: 1px solid #666;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* Screen Body */
+.screen-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Input Field */
+.input-field {
+    margin-bottom: 10px;
+}
+
+.input-field label {
+    font-size: 12px;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.input-value {
+    background-color: #e8f5e9;
+    border: 1px solid #666;
+    padding: 3px 5px;
+    min-height: 20px;
+    font-size: 14px;
+    cursor: text;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Focused input styling */
+.input-value.focused {
+    background-color: #fff;
+    border: 2px solid #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Menu Items */
+.menu-item {
+    padding: 5px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.menu-item.selected {
+    background-color: #333;
+    color: #fff;
+}
+
+/* Screen Message */
+.screen-message {
+    font-size: 10px;
+    margin-top: auto;
+    border-top: 1px solid #666;
+    padding-top: 5px;
+}
+
+/* Стилі для екранів комплектації */
+.order-info, .sku-info, .picking-result {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.picking-result .result-success {
+    color: #28a745;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.result-error {
+    color: #dc3545;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.result-error + div {
+    margin-bottom: 10px;
+}
+
+.result-error + div + div {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.picking-result .all-picked {
+    color: #007bff;
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.picked-item {
+    border-top: 1px dashed #ccc;
+    padding-top: 5px;
+    margin-top: 5px;
+}
+
+.message-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.message-success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.message-info {
+    color: #17a2b8;
+}
+
+/* Weighing Station Styles */
+.weight-display {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.current-weight {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.weighing-result {
+    display: none;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
+.sscc-code {
+    font-family: monospace;
+    font-size: 12px;
+    margin-bottom: 5px;
+    word-break: break-all;
+}
+
+.barcode-container {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.barcode-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.barcode-placeholder {
+    font-family: monospace;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    word-break: break-all;
+    margin: 5px 0;
+}
+
+.label-preview {
+    border: 1px dashed #999;
+    padding: 5px;
+    margin: 10px 0;
+    background-color: #fff;
+}
+
+.label-header {
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.label-content {
+    font-size: 10px;
+}
+
+.label-row {
+    margin-bottom: 3px;
+}
+
+.print-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.print-button:hover {
+    background-color: #218838;
+}
+
+/* TSD Keypad */
+.tsd-keypad {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Function Keys */
+.function-keys {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.function-key {
+    background-color: #3498db;
+    color: white;
+    width: 40px;
+    font-size: 12px;
+}
+
+/* Arrow Keys */
+.arrow-keys {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.arrow-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.arrow-row > div {
+    width: 30px;
+    height: 30px;
+}
+
+.arrow-key {
+    background-color: #7f8c8d;
+    color: white;
+    font-size: 16px;
+}
+
+/* Numeric Keypad */
+.numeric-keypad {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.keypad-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Key Styles */
+.key {
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.1s;
+}
+
+.key:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.number-key {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.letter-key {
+    background-color: #28a745;
+    color: white;
+}
+
+.function-key {
+    background-color: #6c757d;
+    color: white;
+}
+
+.arrow-key {
+    background-color: #007bff;
+    color: white;
+}
+
+.action-key {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    .tsd-device {
+        max-width: 320px;
+    }
+    
+    .key {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+    }
+    
+    .function-key {
+        width: 35px;
+    }
+}
