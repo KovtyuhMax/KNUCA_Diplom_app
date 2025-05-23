@@ -271,8 +271,4 @@ All database connection settings are stored in the `.env` file. Default values a
 
 ## License
 
-This project is proprietary software.
-
-## Contact
-
-For support or inquiries, please contact the project maintainer.
+Kyiv National University of Construction and Architectur(KNUCA) - 2025.
